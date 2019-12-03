@@ -46,3 +46,33 @@ Here are the initial and final states of a few more small programs:
 Once you have a working computer, the first step is to restore the gravity assist program (your puzzle input) to the "1202 program alarm" state it had just before the last computer caught fire. To do this, before running the program, replace position 1 with the value 12 and replace position 2 with the value 2. What value is left at position 0 after the program halts?
 '''
 
+def intcode_computer(instructions: list) -> list:
+    current_opcode = instructions[0]
+    position = 0
+    while current_opcode != '99':
+        value1 = int(instructions[int(instructions[position + 1])])
+        value2 = int(instructions[int(instructions[position + 2])])
+        if current_opcode == '1':
+            newValue = value1 + value2
+        elif current_opcode == '2':
+            newValue = value1 * value2
+
+        instructions[int(instructions[position + 3])] = str(newValue)
+        position += 4
+        current_opcode = instructions[position]
+
+    return instructions
+
+# input1 = "1,0,0,0,99"
+# input2 = "2,3,0,3,99"
+# input3 = "2,4,4,5,99,0"
+# input4 = "1,1,1,4,99,5,6,0,99"
+
+# print ('Input is: {} and ouput is: {}'.format(input1, ",".join(intcode_computer(input1.split(",")))))
+# print ('Input is: {} and ouput is: {}'.format(input2, ",".join(intcode_computer(input2.split(",")))))
+# print ('Input is: {} and ouput is: {}'.format(input3, ",".join(intcode_computer(input3.split(",")))))
+# print ('Input is: {} and ouput is: {}'.format(input4, ",".join(intcode_computer(input4.split(",")))))
+
+input_real = "1,12,2,3,1,1,2,3,1,3,4,3,1,5,0,3,2,1,10,19,1,19,5,23,2,23,6,27,1,27,5,31,2,6,31,35,1,5,35,39,2,39,9,43,1,43,5,47,1,10,47,51,1,51,6,55,1,55,10,59,1,59,6,63,2,13,63,67,1,9,67,71,2,6,71,75,1,5,75,79,1,9,79,83,2,6,83,87,1,5,87,91,2,6,91,95,2,95,9,99,1,99,6,103,1,103,13,107,2,13,107,111,2,111,10,115,1,115,6,119,1,6,119,123,2,6,123,127,1,127,5,131,2,131,6,135,1,135,2,139,1,139,9,0,99,2,14,0,0"
+
+print(intcode_computer(input_real.split(",")))
