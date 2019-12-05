@@ -15,7 +15,7 @@ Other than the range rule, the following are true:
 223450 does not meet these criteria (decreasing pair of digits 50).
 123789 does not meet these criteria (no double).
 How many different passwords within the range given in your puzzle input meet these criteria?
---> 56549
+--> 2779
 
 Your puzzle input is 108457-562041.
 '''
@@ -30,10 +30,13 @@ def checkIfNumIsPossiblePassword(num: int) -> bool:
     prev_digit = int(str_version[0])
     has_double_digits = False
     for i in range(1, len(str_version)):
-        if int(str_version[i]) < prev_digit:
+        new_digit = int(str_version[i])
+        if new_digit < prev_digit:
             return False
-        if int(str_version[i]) == prev_digit:
+        if new_digit == prev_digit:
             has_double_digits = True
+        
+        prev_digit = new_digit
     
     return has_double_digits
 
