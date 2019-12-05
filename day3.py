@@ -4,12 +4,14 @@ import re
 class Point:
     x: int
     y: int
+    steps_here: int
 
-    def __init__(self,x,y):
+    def __init__(self, x:int, y:int, steps_here:int):
         self.x = x
         self.y = y
+        self.steps_here = 0
 
-    def manhattanDistanceToStart(self):
+    def manhattanDistanceToStart(self) -> int:
         return abs(self.x) + abs(self.y)
 
     def __eq__(self, other):
@@ -57,15 +59,41 @@ def getSetOfPointsVisitedFromWire(wire: str) -> {Point}:
             currentPoint = nextPoint
     return point_set
 
-def getNextStepPoint(currentPoint: Point, letter: str) -> Point:
+# Create map of points to distance first visited, find intersection of map keys, add values togther
+# TODO: Figure out how to make a map :)
+
+def getClosestImpedancePointToZeroInSets(intersectionSet: {Point}, firstSet: {Point}, secondSet: {Point}) -> int:
+    distance = 1000000000
+    for point in intersectionSet:
+        if point.manhattanDistanceToStart() < distance:
+            distance = point.manhattanDistanceToStart()
+
+    return distance
+
+def getSetOfPointsVisitedFromWireWithImpedance(wire: str) -> {Point}:
+    currentPoint = Point(0,0)
+    wire_array = wire.split(",")
+    point_set = set()
+    num_steps = 1
+    for instruction in wire_array:
+        letter = re.match('[A-Z]', instruction).group()
+        steps = int(re.findall('[0-9]+', instruction).pop())
+        for step in range(steps):
+            nextPoint = getNextStepPoint(currentPoint, letter, num_steps)
+            point_set.add(nextPoint)
+            currentPoint = nextPoint
+            num_steps += 1
+    return point_set
+
+def getNextStepPoint(currentPoint: Point, letter: str, num_steps: int) -> Point:
     if letter == 'R':
-        return Point(currentPoint.x + 1, currentPoint.y)
+        return Point(currentPoint.x + 1, currentPoint.y, num_steps)
     if letter == 'L':
-        return Point(currentPoint.x - 1, currentPoint.y)
+        return Point(currentPoint.x - 1, currentPoint.y, num_steps)
     if letter == 'U':
-        return Point(currentPoint.x, currentPoint.y + 1)
+        return Point(currentPoint.x, currentPoint.y + 1, num_steps)
     if letter == 'D':
-        return Point(currentPoint.x, currentPoint.y - 1)
+        return Point(currentPoint.x, currentPoint.y - 1, num_steps)
     
     raise AttributeError("Wtf are you doing???")
 
