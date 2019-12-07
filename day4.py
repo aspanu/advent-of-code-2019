@@ -56,7 +56,7 @@ def findNumberOfPossiblePasswords(input_min: int, input_max: int) -> int:
     
     return num_passwords
 
-print(findNumberOfPossiblePasswords(108457, 562041))
+# print(findNumberOfPossiblePasswords(108457, 562041))
 
 '''
 --- Part Two ---
@@ -69,3 +69,56 @@ Given this additional criterion, but still ignoring the range rule, the followin
 111122 meets the criteria (even though 1 is repeated more than twice, it still contains a double 22).
 How many different passwords within the range given in your puzzle input meet all of the criteria?
 '''
+
+def checkIfNumIsPossibleNewRules(num: int) -> bool:
+    str_version = str(num)
+    prev_digit = int(str_version[0])
+    num_digits = resetNumDigits()
+    num_digits[prev_digit] += 1
+    found_double = False
+    for i in range(1, len(str_version)):
+        new_digit = int(str_version[i])
+        if new_digit < prev_digit:
+            return False
+        if new_digit != prev_digit:
+            if checkForPair(num_digits):
+                found_double = True
+            num_digits = resetNumDigits()
+
+        num_digits[new_digit] += 1
+        prev_digit = new_digit
+
+    return found_double or checkForPair(num_digits)
+
+def checkForPair(num_digits: dict) -> bool:
+    for key in num_digits.keys():
+        if num_digits[key] == 2:
+            return True
+    
+    return False
+
+def resetNumDigits() -> dict:
+    return {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}
+
+def findNumberOfPossiblePasswordsNewRules(input_min: int, input_max: int) -> int:
+    start_num = max(111111, input_min)
+    end_num = min(999999, input_max)
+
+    num_passwords = 0
+
+    for num in range(start_num, end_num+1):
+        if checkIfNumIsPossibleNewRules(num):
+            num_passwords += 1
+    
+    return num_passwords
+
+print(findNumberOfPossiblePasswordsNewRules(108457, 562041))
+
+# print(checkIfNumIsPossibleNewRules(111111)) # No
+# print(checkIfNumIsPossibleNewRules(112233)) # Yes
+# print(checkIfNumIsPossibleNewRules(223450)) # No
+# print(checkIfNumIsPossibleNewRules(123789)) # No
+# print(checkIfNumIsPossibleNewRules(123444)) # No
+# print(checkIfNumIsPossibleNewRules(111122)) # Yes
+
+
