@@ -49,13 +49,15 @@ COM orbits nothing.
 The total number of direct and indirect orbits in this example is 42.
 
 What is the total number of direct and indirect orbits in your map data?
+--> 142497
 """
 
 class Orbit:
 
-    def __init__(self, parent = None, total_orbits: int=0):
+    def __init__(self, parent = None, total_orbits: int=0, name: str = None):
         self.parent = parent
         self.total_orbits = total_orbits
+        self.name = name
 
     def getTotalOrbits(self):
         if self.parent is None:
@@ -68,24 +70,31 @@ class Orbit:
 def getTotalNumberOfOrbits(input: str) -> int:
     # Create a map storing all of the names to the objects created for them
     # then go through all of the keys and add up their total orbits
-    orbits_available = {"COM": Orbit(parent = None, total_orbits = 0)}
-    for line in input.splitlines():
-        orbits = line.split(")")
-        fromOrbitName = orbits[0]
-        if fromOrbitName not in orbits_available:
-            orbits_available[fromOrbitName] = Orbit(parent = None, total_orbits = 0)
-
-        toOrbitName = orbits[1]
-        if toOrbitName not in orbits_available:
-            orbits_available[toOrbitName] = Orbit(parent = orbits_available[fromOrbitName], total_orbits = 0)
-        else:
-            orbits_available[toOrbitName].parent = orbits_available[fromOrbitName]
-
+    orbits_available = create_orbits_available(input)
+    
     total_orbits = 0
     for orbitName in orbits_available.keys():
         total_orbits += orbits_available[orbitName].getTotalOrbits()
 
     return total_orbits
+
+def create_orbits_available(input: str) -> dict:
+
+    orbits_available = {"COM": Orbit(parent = None, total_orbits = 0)}
+    for line in input.splitlines():
+        orbits = line.split(")")
+        fromOrbitName = orbits[0]
+        if fromOrbitName not in orbits_available:
+            orbits_available[fromOrbitName] = Orbit(parent = None, total_orbits = 0, name= fromOrbitName)
+
+        toOrbitName = orbits[1]
+        if toOrbitName not in orbits_available:
+            orbits_available[toOrbitName] = Orbit(parent = orbits_available[fromOrbitName], total_orbits = 0, name=toOrbitName)
+        else:
+            orbits_available[toOrbitName].parent = orbits_available[fromOrbitName]
+    
+    return orbits_available
+
 
 test_input = """COM)B
 B)C
@@ -1209,3 +1218,64 @@ COM - B - C - D - E - F
                   YOU
 What is the minimum number of orbital transfers required to move from the object YOU are orbiting to the object SAN is orbiting? (Between the objects they are orbiting - not between YOU and SAN.)
 '''
+
+# Find common parent, and take away parent orbital distance from each and sum them together
+# i.e. SAN.distance + YOU.distance - (2*common path ancestor.distance) - 2
+
+def getDistanceToSanta(input: str) -> int:
+    orbits_available = create_orbits_available(input)
+
+    me = orbits_available["YOU"]
+    santa = orbits_available["SAN"]
+
+    common_ancestor = get_common_ancestor(orbits_available, me, santa)
+
+    return me.getTotalOrbits() - 1 + santa.getTotalOrbits() - 1 - (2 * common_ancestor.getTotalOrbits())
+
+def get_common_ancestor(all_orbits: dict, orbit_a: Orbit, orbit_b: Orbit) -> Orbit:
+    ancestor_names_a = get_all_ancestor_names(orbit_a)
+
+    first_common_ancestor_name = find_first_common_ancestor(ancestor_names_a, orbit_b)
+
+    return all_orbits[first_common_ancestor_name]
+
+def get_all_ancestor_names(orbit: Orbit) -> set:
+    current_orbit = orbit
+    ancestors = {current_orbit.name}
+
+    while current_orbit.parent is not None:
+        current_orbit = current_orbit.parent
+        ancestors.add(current_orbit.name)
+
+    return ancestors
+
+def find_first_common_ancestor(ancestors: set, orbit: Orbit) -> str:
+    
+    current_orbit = orbit
+    current_name = current_orbit.name
+    if current_name in ancestors:
+        return current_name
+    while current_orbit.parent is not None:
+        current_orbit = current_orbit.parent
+        current_name = current_orbit.name
+        if current_name in ancestors:
+            return current_name
+
+    raise AssertionError("No common ancestor? Wtf")        
+
+test_input_part_2 = """COM)B
+B)C
+C)D
+D)E
+E)F
+B)G
+G)H
+D)I
+E)J
+J)K
+K)L
+K)YOU
+I)SAN"""
+
+print(getDistanceToSanta(test_input_part_2))
+print(getDistanceToSanta(puzzle_input))
