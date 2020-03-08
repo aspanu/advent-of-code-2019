@@ -1,3 +1,5 @@
+import re
+
 '''
 The space near Jupiter is not a very safe place; you need to be careful of a big distracting red spot, extreme radiation, and a whole lot of moons swirling around. You decide to start by tracking the four largest moons: Io, Europa, Ganymede, and Callisto.
 
@@ -181,3 +183,109 @@ puzzle_input = '''<x=1, y=3, z=-11>
 <x=17, y=-10, z=-8>
 <x=-1, y=-15, z=2>
 <x=12, y=-4, z=-4>'''
+
+class Point3D:
+    x:int
+    y:int
+    z:int
+
+    def __init__(self, x:int, y:int, z:int):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    @staticmethod
+    def create_from_string(point_string: str):
+        # point_string looks like: '<x=1, y=3, z=-11>'
+        # regex: <x=(.*), y=(.*), z=(.*)>
+        regex = "<x=(.*), y=(.*), z=(.*)>"
+        m = re.search(regex, point_string)
+        x = int(m.group(1))
+        y = int(m.group(2))
+        z = int(m.group(3))
+        return Point3D(x, y, z)
+
+    def getEnergy(self) -> int:
+        return abs(self.x) + abs(self.y) + abs(self.z)
+
+    def __str__(self) -> str:
+        return f'x: {self.x}, y: {self.y}, z: {self.z}'
+
+    def addPoint(self, other_point):
+        self.x += other_point.x
+        self.y += other_point.y
+        self.z += other_point.z
+        return self
+
+def calculate_energy_at_step(input: str, steps: int) -> int:
+    (moon_positions, moon_velocities) = initialize_from_input(input)
+    for i in range(steps):
+        moon_velocities = calculate_new_velocity(moon_positions, moon_velocities)
+        moon_positions = calculate_new_positions(moon_positions, moon_velocities)
+    
+    return calculate_energy(moon_positions, moon_velocities)
+    
+def initialize_from_input(input: str) -> (list, list):
+    lines = input.split("\n")
+    moon_positions = list()
+    moon_velocities = list()
+    for line in lines:
+        moon_positions.append(Point3D.create_from_string(line))
+        moon_velocities.append(Point3D(0, 0, 0))
+    return moon_positions, moon_velocities
+
+def calculate_new_velocity(positions: list, velocities: list) -> list:
+    if len(positions) != len(velocities):
+        raise ValueError("The lengths of the position and velocity must be same.")
+
+    for i in range(len(positions)):
+        point_velocity = Point3D(0, 0, 0)
+        for j in range(len(positions)):
+            if i == j:
+                continue
+            point_velocity.addPoint(grav_pull(positions[i], positions[j]))
+        velocities[i].addPoint(point_velocity)
+    
+    return velocities
+
+def grav_pull(on: Point3D, by: Point3D) -> Point3D:
+    x = cmp(by.x, on.x)
+    y = cmp(by.y, on.y)
+    z = cmp(by.z, on.z)
+    return Point3D(x, y, z)
+
+def calculate_new_positions(positions: list, velocities: list) -> list:
+    if len(positions) != len(velocities):
+        raise ValueError("The lengths of the position and velocity must be same.")
+    for i in range(len(positions)):
+        positions[i].addPoint(velocities[i])
+    
+    return positions
+
+def calculate_energy(positions: list, velocities: list) -> int:
+    if len(positions) != len(velocities):
+        raise ValueError("The lengths of the position and velocity must be same.")
+
+    energy_so_far = 0
+    for i in range(len(positions)):
+        energy_so_far += positions[i].getEnergy() * velocities[i].getEnergy()
+
+    return energy_so_far
+
+def cmp(a: int, b: int) -> int:
+    return (a > b) - (a < b)
+
+test_input = '''<x=-1, y=0, z=2>
+<x=2, y=-10, z=-7>
+<x=4, y=-8, z=8>
+<x=3, y=5, z=-1>'''
+
+second_test_input = '''<x=-8, y=-10, z=0>
+<x=5, y=5, z=10>
+<x=2, y=-7, z=3>
+<x=9, y=-8, z=-3>'''
+
+print(calculate_energy_at_step(test_input, 0))
+print(calculate_energy_at_step(test_input, 10))
+print(calculate_energy_at_step(second_test_input, 100))
+print(calculate_energy_at_step(puzzle_input, 1000)) # 8310
